@@ -56,6 +56,25 @@ Schedule Trigger
             ↓
           Telegram
 ```
+## Workflow Overview
+
+![AI News Intelligence n8n Workflow](screenshots/workflow-overview.png)
+
+## Results
+
+### Daily Telegram AI News Digest
+
+![Telegram AI News Digest](screenshots/telegram-digest.png)
+
+### Google Sheets News Database
+
+![Google Sheets AI News Database](screenshots/google-sheets.png)
+
+### Error Handling
+
+The workflow includes a separate error-handling workflow that sends an immediate Telegram notification when a production execution fails.
+
+![n8n Error Handler Telegram Alert](screenshots/error-handler.png)
 
 A separate n8n Error Workflow sends a Telegram alert if the production
 workflow fails.
