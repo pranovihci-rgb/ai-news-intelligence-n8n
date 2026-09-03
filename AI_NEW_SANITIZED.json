@@ -1,0 +1,1190 @@
+{
+  "name": "AI NEW",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://techcrunch.com/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        160
+      ],
+      "id": "8c4d982c-b05e-4b9c-8258-680c3a1d8e61",
+      "name": "RSS Read",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://www.theverge.com/rss/index.xml",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        -32
+      ],
+      "id": "e84250bd-fa86-4cfe-bdb5-85cdb45e9c06",
+      "name": "RSS Read1",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://openai.com/news/rss.xml",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        1344,
+        -176
+      ],
+      "id": "17d413f6-f1f4-449e-b218-713446bfd733",
+      "name": "RSS Read2"
+    },
+    {
+      "parameters": {
+        "url": "https://www.anthropic.com/news",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        -368
+      ],
+      "id": "8f5e1dd3-ee4e-4f5a-854d-72cc4b0a6923",
+      "name": "HTTP Request",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "title",
+              "cssSelector": "a[href^=\"/news/\"]",
+              "returnArray": true
+            },
+            {
+              "key": "link",
+              "cssSelector": "a[href^=\"/news/\"]",
+              "returnValue": "attribute",
+              "attribute": "href",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        -368
+      ],
+      "id": "0e9c2688-e886-4512-be6d-aa260bf4b117",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7ce6f4af-7eea-46b9-b9cd-d2fa940624fa",
+              "name": "title_clean",
+              "value": "={{ $json.title.map(t => t.replace(/\\n/g, ' ').trim()) }}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        672,
+        -368
+      ],
+      "id": "2fdb3e51-a545-449c-9887-fed44f6548c7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "link",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        896,
+        -368
+      ],
+      "id": "7e39e58f-3057-4c4c-8b94-0a3cb164b5a2",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "title",
+              "cssSelector": "h1"
+            },
+            {
+              "key": "published_at",
+              "cssSelector": "meta[property=\"article:published_time\"]",
+              "returnValue": "attribute",
+              "attribute": "content"
+            },
+            {
+              "key": "content",
+              "cssSelector": "article"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        1344,
+        -368
+      ],
+      "id": "de6b5db5-0039-4ff0-adb7-23d38993fc5f",
+      "name": "HTML1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "019cadbb-df27-4b21-85dc-9f210ca77eef",
+              "name": "source",
+              "value": "Anthropic",
+              "type": "string"
+            },
+            {
+              "id": "4446e18f-ce78-472d-9b62-b97945210c2a",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "3d231f32-7d48-4a90-9324-26a50f397386",
+              "name": "url",
+              "value": "={{ 'https://www.anthropic.com' + $('Split Out').item.json.link }}",
+              "type": "string"
+            },
+            {
+              "id": "49a571b9-3e38-48a5-a90c-026b8238a645",
+              "name": "content",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            },
+            {
+              "id": "b5ef7025-c4eb-4ad4-9087-ec61adb292e7",
+              "name": "published_at",
+              "value": "={{ $json.content.match(/\\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s+\\d{1,2},\\s+\\d{4}\\b/)?.[0] || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1568,
+        -368
+      ],
+      "id": "6a7974d5-3d00-42ba-b42c-fa3720b541ca",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "24632aeb-3761-4302-b396-310ab97395a5",
+              "name": "source",
+              "value": "TechCrunch",
+              "type": "string"
+            },
+            {
+              "id": "8bf765b4-c4f1-4896-8c71-1eb519bd9e25",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "19f35a0f-378d-455e-bcd4-f6214c6ed54b",
+              "name": "url",
+              "value": "={{ $json.link }}",
+              "type": "string"
+            },
+            {
+              "id": "6189eaf0-bf8c-4b17-81aa-ae203b38aeb6",
+              "name": "published_at",
+              "value": "={{ $json.pubDate }}",
+              "type": "string"
+            },
+            {
+              "id": "3c94fe66-7162-441e-ab97-51861fc54645",
+              "name": "content",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        160
+      ],
+      "id": "1337379b-2e35-464b-b609-ae72c0aea2c0",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "24632aeb-3761-4302-b396-310ab97395a5",
+              "name": "source",
+              "value": "theverge",
+              "type": "string"
+            },
+            {
+              "id": "8bf765b4-c4f1-4896-8c71-1eb519bd9e25",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "19f35a0f-378d-455e-bcd4-f6214c6ed54b",
+              "name": "url",
+              "value": "={{ $json.link }}",
+              "type": "string"
+            },
+            {
+              "id": "6189eaf0-bf8c-4b17-81aa-ae203b38aeb6",
+              "name": "published_at",
+              "value": "={{ $json.pubDate }}",
+              "type": "string"
+            },
+            {
+              "id": "3c94fe66-7162-441e-ab97-51861fc54645",
+              "name": "content",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        -32
+      ],
+      "id": "b5fbf82e-a1e2-41f0-bab1-51c7b826b79f",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "24632aeb-3761-4302-b396-310ab97395a5",
+              "name": "source",
+              "value": "openai",
+              "type": "string"
+            },
+            {
+              "id": "8bf765b4-c4f1-4896-8c71-1eb519bd9e25",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "19f35a0f-378d-455e-bcd4-f6214c6ed54b",
+              "name": "url",
+              "value": "={{ $json.link }}",
+              "type": "string"
+            },
+            {
+              "id": "6189eaf0-bf8c-4b17-81aa-ae203b38aeb6",
+              "name": "published_at",
+              "value": "={{ $json.pubDate }}",
+              "type": "string"
+            },
+            {
+              "id": "3c94fe66-7162-441e-ab97-51861fc54645",
+              "name": "content",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1568,
+        -176
+      ],
+      "id": "80b0a04a-839a-41a7-b3f9-ce1fe6584bb7",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        672,
+        64
+      ],
+      "id": "0c45f5f3-1286-4855-8c76-1fd466d26d2a",
+      "name": "Merge"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1792,
+        -272
+      ],
+      "id": "bdd763aa-7118-4fc1-9fa1-cab2fd893151",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2016,
+        -96
+      ],
+      "id": "4ad039a8-234c-458a-9d26-2bd9f17da776",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8971149f-d291-4f92-be67-f7fdf139dc3b",
+              "leftValue": "={{ DateTime.fromJSDate(new Date($json.published_at)) }}",
+              "rightValue": "={{ $now.setZone('Europe/Warsaw').minus({ hours: 24 }) }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "after"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        2240,
+        -96
+      ],
+      "id": "1968ee89-d9e6-42fc-be2f-7f503d41eb7b",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b2327dda-ee73-48cd-95cb-e50a1c13047d",
+              "leftValue": "={{\n  /(\\bai\\b|artificial intelligence|openai|anthropic|claude|gpt|llm|agent|model|machine learning)/i\n    .test(($json.title + ' ' + $json.content))\n}}",
+              "rightValue": "={{\n  /(\\bai\\b|artificial intelligence|openai|anthropic|claude|gpt|llm|agent|model|machine learning)/i\n    .test(($json.title + ' ' + $json.content))\n}}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2464,
+        -96
+      ],
+      "id": "15ab0d93-7bd9-4cc7-92ca-081da85dded1",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI",
+          "cachedResultUrl": ""
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Analyze the following technology news article.\n\nTitle: {{ $json.title }}\n\nContent:\n{{ $json.content }}\n\nDetermine whether this article is important for AI, automation, AI agents, LLMs, or major technology developments.\n\nReturn ONLY valid JSON in this exact format:\n{\n  \"relevant\": true,\n  \"category\": \"AI\",\n  \"importance\": 8,\n  \"summary\": \"Short summary of the news in Russian\"\n}\n\nRules:\n- relevant must be true or false\n- category must be one of: AI, Automation, AI Agents, LLM, Technology, Other\n- importance must be a number from 1 to 10\n- summary must be in Russian and maximum 2 sentences"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        2688,
+        -96
+      ],
+      "id": "21036e60-680f-4554-a591-379fc0f3c556",
+      "name": "Message a model",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1700379e-c4b5-4ae8-b2fd-696740c97c2d",
+              "name": "ai_result",
+              "value": "={{ JSON.parse($json.output[0].content[0].text) }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        3040,
+        -96
+      ],
+      "id": "1428588c-1664-46dc-91b9-82961e621eac",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c802ea07-f224-470f-a4b0-15558942fbfd",
+              "leftValue": "={{ $json.ai_result.importance }}",
+              "rightValue": 7,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        3264,
+        -96
+      ],
+      "id": "b778e7a3-3b7f-40a5-b9d7-43fc444cc900",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "ai_result.importance",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        3488,
+        -96
+      ],
+      "id": "9faf05c4-ee52-4e10-865a-be9f47c5641d",
+      "name": "Sort"
+    },
+    {
+      "parameters": {
+        "maxItems": 5
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        3712,
+        -96
+      ],
+      "id": "d912345c-e238-44f8-b346-e59b3ea38c86",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "268572a3-438e-4393-abae-34e06db8e991",
+              "name": "source",
+              "value": "={{ $('If').item.json.source }}",
+              "type": "string"
+            },
+            {
+              "id": "64e533b3-ca05-49ab-aa8a-e5d3daca813c",
+              "name": "title",
+              "value": "={{ $('If').item.json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "348becba-d2ec-4e2b-9b2a-e237b4f6de52",
+              "name": "url",
+              "value": "={{ $('If').item.json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "c48e7b5e-34d9-4f7f-b08d-8fcb6a9445eb",
+              "name": "published_at",
+              "value": "={{ $('If').item.json.published_at }}",
+              "type": "string"
+            },
+            {
+              "id": "d91ab9ad-2d09-4322-9c7d-40473de51aba",
+              "name": "category",
+              "value": "={{ $json.ai_result.category }}",
+              "type": "string"
+            },
+            {
+              "id": "904bc055-97fe-47a3-aa1d-56913ee5bda1",
+              "name": "importance",
+              "value": "={{ $json.ai_result.importance }}",
+              "type": "string"
+            },
+            {
+              "id": "7ae4b636-d2d7-4589-815c-ed64d856612d",
+              "name": "summary",
+              "value": "={{ $json.ai_result.summary }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        3936,
+        -96
+      ],
+      "id": "d005f5c3-e6c0-4f0b-90b0-b8e5c0fb601c",
+      "name": "Edit Fields6"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "__GOOGLE_SHEET_ID__",
+          "mode": "list",
+          "cachedResultName": "AI News Database",
+          "cachedResultUrl": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Лист1",
+          "cachedResultUrl": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "url": "={{ $json.url }}",
+            "source": "={{ $json.source }}",
+            "title": "={{ $json.title }}",
+            "published_at": "={{ $json.published_at }}",
+            "category": "={{ $json.category }}",
+            "importance": "={{ $json.importance }}",
+            "summary": "={{ $json.summary }}"
+          },
+          "matchingColumns": [
+            "url"
+          ],
+          "schema": [
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "published_at",
+              "displayName": "published_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "importance",
+              "displayName": "importance",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4160,
+        -96
+      ],
+      "id": "238c31e7-d51e-4e8c-9470-109c80da54ee",
+      "name": "Append or update row in sheet",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "articles",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        4384,
+        -96
+      ],
+      "id": "3d7fe42d-4283-4679-a08a-5ab6c73157be",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9ff8a51a-786b-4a93-935c-ff1c40af203c",
+              "name": "messege",
+              "value": "={{ `🤖 AI NEWS — TOP 5\n\n${$json.articles.map((a, i) => `${i + 1}. ${a.title}\n\n📡 ${a.source} | 🏷️ ${a.category} | ⭐ ${a.importance}/10\n\n📝 ${a.summary}\n\n🔗 ${a.url}`).join('\\n\\n────────────\\n\\n')}` }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        4608,
+        -96
+      ],
+      "id": "6897d8b3-be27-43c8-9f07-9cd0be5dd689",
+      "name": "Edit Fields7"
+    },
+    {
+      "parameters": {
+        "chatId": "__TELEGRAM_CHAT_ID__",
+        "text": "={{ $json.messege }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4832,
+        -96
+      ],
+      "id": "3131d714-41a3-4665-b695-f0057253fc41",
+      "name": "Send a text message",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -16,
+        -112
+      ],
+      "id": "ac2779ae-0740-4ac9-a3a9-803d3c4c484f",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://www.anthropic.com' + $json.link }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1120,
+        -368
+      ],
+      "id": "be4ff458-25a1-45eb-8f70-d6efb254f6c6",
+      "name": "HTTP Request1",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "RSS Read1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields6": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields7": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS Read1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS Read2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTML1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "tags": [],
+  "_sanitized_for_public_sharing": true,
+  "_setup_required": [
+    "Reconnect OpenAI credential",
+    "Reconnect Google Sheets credential and choose your spreadsheet",
+    "Reconnect Telegram credential and set your chat ID",
+    "Reconnect/select an Error Workflow if you use one"
+  ]
+}
